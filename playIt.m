@@ -1,16 +1,28 @@
-% This script solves the 3,4,5,6 Klee-Minty problems to verify
-% exponential growth in the number of iterations
 % AUTHOR: Yujia Yan
 
-toSolve= [15,19,18,17,15,14, 12,11, 10, 9,8, 19,24, 32,6, 4, 19 ,26];
-iters=[64,64,64,32, 16,16,16,16, 16, 16, 16,16,16,16,16, 16, 16,16,32,64];
-pitchShift=[0,0,-1,-1, 0, 4, 2, 1, 0, 2, 4,6,8, 10,12, 64, 32, 24, 12, 0];
-
+toSolve= [
+17,  19  ,18  ,17  ,15  ,14, 12, 11, 10,  9,  8,  19,24, 32, 6,  4, 19 ,26, 44 ,48,48, 36, 34,32,31,48, 37, 34,32, 31, 34,32,37, 40, 20,  19  ,18  ,17  ,15  ,14, 12, 11, 10,  9,  8,  19,24, 32, 6,  4, 19 ,26];
+iters=[
+64,  64,  64,  32,  16,  16, 16, 16, 16, 16, 16,  16,16, 16,16, 16, 16, 16, 64,32,64, 64, 64,64,64,64, 64, 64,64, 64, 64,64,64, 64, 64,  64,  64,  32,  16,  16, 16, 16, 16, 16, 16,  16,16, 16,16, 16, 16, 16];
+pitchShift=[
+0 ,   0,  -1,  -1,   0,   4,  2,  1,  0,  2,  4,   6, 8, 10,12, 64, 32, 24,  0,12,17, 4,   2, 1 ,0, 0, 18, 16,12, 7,  9,  9 ,9, 64,0 ,   0,  -1,  -1,   0,   4,  2,  1,  0,  2,  4,   6, 8, 10,12, 64, 32, 24,];
+pluckOn=[
+0,    0,   0,   0,   0,   0,  0,  0,  0,  0,  0,   0, 0,  0, 0,  0,  0 , 1,  0, 1, 1, 1,   1, 1, 1, 1, 1,   1, 1, 1,  1,  1, 1,  0, 1,    1,   1,   1,   1,   1,  1,  1,  1,  1,  1,   1, 1,  1, 1,  1,  1 , 1];
+windOn=[
+1,    1,   1,   1,   1,   1,  1,  1,  1,  1,  1,   1, 1,  1, 1,  1,  1,  1,  0, 1  0,   1, 0, 0, 1, 1,   1, 1, 1,  1,  1, 1, 1,  0,1,    1,   1,   1,   1,   1,  1,  1,  1,  1,  1,   1, 1,  1, 1,  1,  1,  1,];
+rate=1.0
+count=0;
 for i= 1:length(toSolve)
 	fprintf(' Now solving for the Klee-Minty Problem: %.0f \n', toSolve(i))
-
+	pluck=pluckOn(i);
+	wind=windOn(i);
+	if(toSolve(i)< 30)
 	[A, b, c]= KleeMinty(toSolve(i));
 	BASIS= toSolve(i)+1:2*toSolve(i);
+	else
+	[A,b,c]=hilbertLP(toSolve(i)-30);
+	BASIS= toSolve(i)-30+1:2*(toSolve(i)-30);
+	end
 	step=0;
 	%%script provided in the lecture resource
 	% The Simplex Algorithm
@@ -48,9 +60,14 @@ for i= 1:length(toSolve)
 		BASIS(jL) = jE; %(UPDATE: Replace col jL with col jE.)
 		INVB = inv(A(:,BASIS)); %(inverse of the basis)
 		bbar = INVB*b;
-		
-		playSin(0.1,freqMapping(jE+pitchShift(i)), length(d)/32, 44100, jE*0.0001/(length(d)+0.01), 1/(length(d)+0.01));
-		pause(length(d)/64/2)
+		if(wind)
+		playSin(0.1,freqMapping(jE+pitchShift(i)), length(d)/32*rate, 44100, jE*0.0001*3/(length(d)+0.01), jE/(length(d)+0.01) );
+	end
+	if(pluck)	
+		playKarplusStrong(0.05,freqMapping(jE+pitchShift(i))/2,44100, length(d)/32) ;
+	end
+		pause(length(d)*rate/64/2)
+		bbar
 	end
 		n = length(c);
 		x= zeros(n,1);
